@@ -1,0 +1,16 @@
+{
+  "name": "purescript-botkit",
+  "homepage": "https://github.com/leighman/purescript-botkit",
+  "description": "Purescript wrapper around Botkit",
+  "license": "MIT",
+  "authors": [
+    "Jack Leigh <jack.leigh@gmail.com>"
+  ],
+  "dependencies": {
+    "purescript-eff": "^2.0.0",
+    "purescript-prelude": "^2.3.0"
+  },
+  "devDependencies": {
+    "purescript-psci-support": "^2.0.0"
+  }
+}
