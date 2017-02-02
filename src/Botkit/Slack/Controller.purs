@@ -4,7 +4,7 @@ import Prelude
 
 import Control.Monad.Aff (Aff, launchAff, makeAff)
 import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Class (liftEff)
+import Control.Monad.Eff.Class (class MonadEff, liftEff)
 import Control.Monad.Eff.Exception (EXCEPTION, Error)
 import Data.Function.Uncurried (Fn3, Fn4, runFn3, runFn4)
 import Data.Newtype (unwrap)
@@ -15,6 +15,30 @@ import Node.HTTP (Server)
 
 import Botkit.Slack.Events (Event)
 import Botkit.Slack.Types (BOTKIT, class IsControllerMode, AppMode, BotMode, Controller, RawBot, RawMessage)
+
+data AppM e m a = AppM (Controller m -> Aff e a)
+
+runAppM :: forall e m a. AppM e m a -> Controller m -> Aff e a
+runAppM (AppM f) = f
+
+instance functorAppM :: Functor (AppM e m) where
+  map f (AppM g) = AppM \c -> map f (g c)
+
+instance applyAppM :: Apply (AppM e m) where
+  apply (AppM f) (AppM v) =
+    AppM \c -> f c <*> v c
+
+instance applicativeAppM :: Applicative (AppM e m) where
+  pure x = AppM \_ -> pure x
+
+instance bindAppM :: Bind (AppM e m) where
+  bind (AppM f) k = AppM \c -> do
+    f c >>= \a -> case k a of AppM g -> g c
+
+instance monadAppM :: Monad (AppM e m)
+
+instance monadEffAppM :: MonadEff e (AppM e m) where
+  liftEff a = AppM \_ -> liftEff a
 
 type BotConfig =
   { json_file_store :: String }
@@ -36,24 +60,23 @@ toSlackApp = toSlackAppImpl
 
 setupWebserver
   :: forall e.
-    Controller AppMode ->
     Port ->
-    Aff (botkit :: BOTKIT | e) Server
-setupWebserver controller port =
+    AppM (botkit :: BOTKIT | e) AppMode Server
+setupWebserver port = AppM \c ->
   makeAff \onFailure onSuccess ->
-    runFn4 setupWebserverImpl controller port onFailure onSuccess
+    runFn4 setupWebserverImpl c port onFailure onSuccess
 
-createWebhookEndpoints :: forall e. Controller AppMode -> Server -> Aff (botkit :: BOTKIT | e) Unit
-createWebhookEndpoints c s = liftEff $ createWebhookEndpointsImpl c s
+createWebhookEndpoints :: forall e. Server -> AppM (botkit :: BOTKIT | e) AppMode Unit
+createWebhookEndpoints s = AppM \c ->
+  liftEff $ createWebhookEndpointsImpl c s
 
 createOauthEndpoints
   :: forall e.
-    Controller AppMode ->
     Server ->
     (Handler e) ->
     (Error -> Handler e) ->
-    Aff (botkit :: BOTKIT | e) Unit
-createOauthEndpoints c s onSuccess onFailure =
+    AppM (botkit :: BOTKIT | e) AppMode Unit
+createOauthEndpoints s onSuccess onFailure = AppM \c ->
   liftEff $
     runFn4
       createOauthEndpointsImpl
@@ -64,11 +87,10 @@ createOauthEndpoints c s onSuccess onFailure =
 
 on
   :: forall m e. (IsControllerMode m) =>
-    Controller m ->
     Array Event ->
     (RawBot -> RawMessage -> Aff (botkit :: BOTKIT | e) Unit) ->
-    Aff (botkit :: BOTKIT, err :: EXCEPTION | e) Unit
-on c evs handler =
+    AppM (botkit :: BOTKIT, err :: EXCEPTION | e) m Unit
+on evs handler = AppM \c ->
   liftEff $ runFn3
     onImpl
       c
@@ -77,12 +99,11 @@ on c evs handler =
 
 hears
   :: forall m e. (IsControllerMode m) =>
-    Controller m ->
     Array Pattern ->
     Array Event ->
     (RawBot -> RawMessage -> Aff (botkit :: BOTKIT | e) Unit) ->
-    Aff (botkit :: BOTKIT, err :: EXCEPTION | e) Unit
-hears c ps evs handler =
+    AppM (botkit :: BOTKIT, err :: EXCEPTION | e) m Unit
+hears ps evs handler = AppM \c ->
   liftEff $ runFn4
     hearsImpl
       c
@@ -107,7 +128,9 @@ foreign import setupWebserverImpl
 
 foreign import createWebhookEndpointsImpl
   :: forall e.
-    Controller AppMode -> Server -> Eff (botkit :: BOTKIT | e) Unit
+    Controller AppMode ->
+    Server ->
+    Eff (botkit :: BOTKIT | e) Unit
 
 foreign import createOauthEndpointsImpl
   :: forall e.
