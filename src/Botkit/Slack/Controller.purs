@@ -86,6 +86,13 @@ createOauthEndpoints s onSuccess onFailure = AppM \c ->
       (E.runHandlerM <<< onFailure)
       (E.runHandlerM onSuccess)
 
+spawn
+  :: forall e.
+    Controller BotMode ->
+    { token :: String } ->
+    Eff (botkit :: BOTKIT | e) RawBot
+spawn = spawnImpl
+
 on
   :: forall m e. (IsControllerMode m) =>
     Array Event ->
@@ -141,6 +148,12 @@ foreign import createOauthEndpointsImpl
       (Error -> Request -> Response -> ExpressM e Unit -> ExpressM e Unit)
       (Request -> Response -> ExpressM e Unit -> ExpressM e Unit)
       (Eff (botkit :: BOTKIT | e) Unit)
+
+foreign import spawnImpl
+  :: forall e.
+    (Controller BotMode) ->
+    { token :: String } ->
+    Eff (botkit :: BOTKIT | e) RawBot
 
 foreign import onImpl
   :: forall m e. (IsControllerMode m) =>

@@ -45,6 +45,14 @@ exports.createOauthEndpointsImpl = function (controller, webserver, onError, onS
   }
 }
 
+exports.spawnImpl = function (controller) {
+  return function (config) {
+    return function () {
+      return controller.spawn(config)
+    }
+  }
+}
+
 exports.onImpl = function () {
   return function (controller, events, handler) {
     return function () {
