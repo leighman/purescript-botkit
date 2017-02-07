@@ -5,9 +5,11 @@ module Botkit.Slack.Types
   , BotMode
   , Controller
 
+  , RawAttachment
   , RawBot
   , RawController
   , RawMessage
+  , RawReply
   ) where
 
 foreign import data BOTKIT :: !

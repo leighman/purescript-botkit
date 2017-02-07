@@ -19,7 +19,8 @@ import Control.Monad.Aff.Class (class MonadAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (class MonadEff, liftEff)
 
-import Botkit.Slack.Types (BOTKIT, RawBot, RawMessage)
+import Botkit.Slack.Reply (Reply, toRawReply)
+import Botkit.Slack.Types (BOTKIT, RawBot, RawMessage, RawReply)
 
 data HandlerM e a = HandlerM (RawBot -> RawMessage -> Aff e a)
 
@@ -54,35 +55,35 @@ instance monadAffHandlerM :: MonadAff e (HandlerM e) where
 message :: forall e. HandlerM e RawMessage
 message = HandlerM \b m -> pure m
 
-reply :: forall e. String -> Handler e
+reply :: forall e. Reply -> Handler e
 reply = replyType "reply"
 
 replyAcknowledge :: forall e. Handler e
 replyAcknowledge = HandlerM \b _ ->
   liftEff $ replyAcknowledgeImpl b
 
-replyPublic :: forall e. String -> Handler e
+replyPublic :: forall e. Reply -> Handler e
 replyPublic = replyType "replyPublic"
 
-replyPrivate :: forall e. String -> Handler e
+replyPrivate :: forall e. Reply -> Handler e
 replyPrivate = replyType "replyPrivate"
 
-replyInteractive :: forall e. String -> Handler e
+replyInteractive :: forall e. Reply -> Handler e
 replyInteractive = replyType "replyInteractive"
 
-replyPublicDelayed :: forall e. String -> Handler e
+replyPublicDelayed :: forall e. Reply -> Handler e
 replyPublicDelayed = replyType "replyPublicDelayed"
 
-replyPrivateDelayed :: forall e. String -> Handler e
+replyPrivateDelayed :: forall e. Reply -> Handler e
 replyPrivateDelayed = replyType "replyPrivateDelayed"
 
-replyType :: forall e. String -> String -> Handler e
+replyType :: forall e. String -> Reply -> Handler e
 replyType t r = HandlerM \b m ->
-  liftEff $ replyTypeImpl t b m r
+  liftEff $ replyTypeImpl t b m (toRawReply r)
 
 foreign import replyTypeImpl
   :: forall e.
-    String -> RawBot -> RawMessage -> String -> Eff (botkit :: BOTKIT | e) Unit
+    String -> RawBot -> RawMessage -> RawReply -> Eff (botkit :: BOTKIT | e) Unit
 
 foreign import replyAcknowledgeImpl
   :: forall e.
