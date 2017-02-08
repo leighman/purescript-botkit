@@ -7,3 +7,11 @@ exports.toRawAttachmentImpl = function (unwrap) {
     return attachment
   }
 }
+
+exports.renderConfirmImpl = function (confirm) {
+  confirm.ok_text = confirm.okText
+  confirm.dismiss_text = confirm.dismissText
+  delete confirm.okText
+  delete confirm.dismissText
+  return confirm
+}
