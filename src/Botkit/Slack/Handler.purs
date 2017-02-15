@@ -56,7 +56,8 @@ message :: forall e. HandlerM e RawMessage
 message = HandlerM \b m -> pure m
 
 reply
-  :: forall e. Warn "Unsafe. Prefer `replyXDelayed`. Do not use more than once in a Handler." =>
+  {-- :: forall e. Warn "Unsafe. Prefer `replyXDelayed`. Do not use more than once in a Handler." => --}
+  :: forall e.
     Reply -> Handler e
 reply = replyType "reply"
 
@@ -65,12 +66,14 @@ replyAcknowledge = HandlerM \b _ ->
   liftEff $ replyAcknowledgeImpl b
 
 replyPublic
-  :: forall e. Warn "Unsafe. Prefer `replyPublicDelayed`. Do not use more than once in a Handler." =>
+  {-- :: forall e. Warn "Unsafe. Prefer `replyPublicDelayed`. Do not use more than once in a Handler." => --}
+  :: forall e.
     Reply -> Handler e
 replyPublic = replyType "replyPublic"
 
 replyPrivate
-  :: forall e. Warn "Unsafe. Prefer `replyPrivateDelayed`. Do not use more than once in a Handler." =>
+  {-- :: forall e. Warn "Unsafe. Prefer `replyPrivateDelayed`. Do not use more than once in a Handler." => --}
+  :: forall e.
     Reply -> Handler e
 replyPrivate = replyType "replyPrivate"
 
