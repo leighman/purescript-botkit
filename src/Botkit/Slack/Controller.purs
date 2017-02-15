@@ -9,11 +9,12 @@ import Control.Monad.Eff.Exception (EXCEPTION, Error)
 import Data.Function.Uncurried (Fn3, Fn4, runFn3, runFn4)
 import Data.Newtype (unwrap)
 import Data.String (Pattern)
-import Node.Express.Handler (Handler, runHandlerM)
+import Node.Express.Handler (Handler, runHandlerM) as E
 import Node.Express.Types (ExpressM, Request, Response)
 import Node.HTTP (Server)
 
 import Botkit.Slack.Events (Event)
+import Botkit.Slack.Handler (Handler, runHandlerM)
 import Botkit.Slack.Types (BOTKIT, class IsControllerMode, AppMode, BotMode, Controller, RawBot, RawMessage)
 
 data AppM e m a = AppM (Controller m -> Aff e a)
@@ -73,8 +74,8 @@ createWebhookEndpoints s = AppM \c ->
 createOauthEndpoints
   :: forall e.
     Server ->
-    (Handler e) ->
-    (Error -> Handler e) ->
+    (E.Handler e) ->
+    (Error -> E.Handler e) ->
     AppM (botkit :: BOTKIT | e) AppMode Unit
 createOauthEndpoints s onSuccess onFailure = AppM \c ->
   liftEff $
@@ -82,26 +83,26 @@ createOauthEndpoints s onSuccess onFailure = AppM \c ->
       createOauthEndpointsImpl
       c
       s
-      (runHandlerM <<< onFailure)
-      (runHandlerM onSuccess)
+      (E.runHandlerM <<< onFailure)
+      (E.runHandlerM onSuccess)
 
 on
   :: forall m e. (IsControllerMode m) =>
     Array Event ->
-    (RawBot -> RawMessage -> Aff (botkit :: BOTKIT | e) Unit) ->
+    Handler e ->
     AppM (botkit :: BOTKIT, err :: EXCEPTION | e) m Unit
 on evs handler = AppM \c ->
   liftEff $ runFn3
     onImpl
       c
       (map show evs)
-      (\b m -> void $ launchAff $ handler b m)
+      (\b m -> void $ launchAff $ runHandlerM handler b m)
 
 hears
   :: forall m e. (IsControllerMode m) =>
     Array Pattern ->
     Array Event ->
-    (RawBot -> RawMessage -> Aff (botkit :: BOTKIT | e) Unit) ->
+    Handler e ->
     AppM (botkit :: BOTKIT, err :: EXCEPTION | e) m Unit
 hears ps evs handler = AppM \c ->
   liftEff $ runFn4
@@ -109,7 +110,7 @@ hears ps evs handler = AppM \c ->
       c
       (map unwrap ps)
       (map show evs)
-      (\b m -> void $ launchAff $ handler b m)
+      (\b m -> void $ launchAff $ runHandlerM handler b m)
 
 foreign import createSlackBotImpl
   :: forall e. BotConfig -> Eff (botkit :: BOTKIT | e) (Controller BotMode)
