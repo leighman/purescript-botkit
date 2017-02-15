@@ -5,6 +5,13 @@ module Botkit.Slack.Types
   , BotMode
   , Controller
 
+  , RawChannel
+  , RawTeam
+  , RawUser
+  , ChannelId(..)
+  , TeamId(..)
+  , UserId(..)
+
   , RawAttachment
   , RawBot
   , RawController
@@ -19,6 +26,14 @@ foreign import data BOTKIT :: !
 foreign import data RawBot :: *
 foreign import data RawController :: *
 foreign import data RawMessage :: *
+
+foreign import data RawChannel :: *
+foreign import data RawUser :: *
+foreign import data RawTeam :: *
+
+newtype ChannelId = ChannelId String
+newtype TeamId = TeamId String
+newtype UserId = UserId String
 
 foreign import data RawReply :: *
 foreign import data RawAttachment :: *
