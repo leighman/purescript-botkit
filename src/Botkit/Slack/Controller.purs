@@ -15,7 +15,7 @@ import Node.HTTP (Server)
 
 import Botkit.Slack.Events (Event)
 import Botkit.Slack.Handler (Handler, runHandlerM)
-import Botkit.Slack.Types (BOTKIT, class IsControllerMode, AppMode, BotMode, Controller, RawBot, RawMessage)
+import Botkit.Slack.Types (BOTKIT, class IsControllerMode, AppMode, BotMode, Controller, RawBot, RawMessage, toRawController)
 
 data AppM e m a = AppM (Controller m -> Aff e a)
 
@@ -103,7 +103,7 @@ on evs handler = AppM \c ->
     onImpl
       c
       (map show evs)
-      (\b m -> void $ launchAff $ runHandlerM handler b m)
+      (\b m -> void $ launchAff $ runHandlerM handler (toRawController c) b m)
 
 hears
   :: forall m e. (IsControllerMode m) =>
@@ -117,7 +117,7 @@ hears ps evs handler = AppM \c ->
       c
       (map unwrap ps)
       (map show evs)
-      (\b m -> void $ launchAff $ runHandlerM handler b m)
+      (\b m -> void $ launchAff $ runHandlerM handler (toRawController c) b m)
 
 foreign import createSlackBotImpl
   :: forall e. BotConfig -> Eff (botkit :: BOTKIT | e) (Controller BotMode)

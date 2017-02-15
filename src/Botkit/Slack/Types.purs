@@ -10,6 +10,8 @@ module Botkit.Slack.Types
   , RawController
   , RawMessage
   , RawReply
+
+  , toRawController
   ) where
 
 foreign import data BOTKIT :: !
@@ -22,6 +24,9 @@ foreign import data RawReply :: *
 foreign import data RawAttachment :: *
 
 newtype Controller a = Controller RawController
+
+toRawController :: forall a. IsControllerMode a => Controller a -> RawController
+toRawController (Controller r) = r
 
 data AppMode
 data BotMode
