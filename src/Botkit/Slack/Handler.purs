@@ -55,17 +55,23 @@ instance monadAffHandlerM :: MonadAff e (HandlerM e) where
 message :: forall e. HandlerM e RawMessage
 message = HandlerM \b m -> pure m
 
-reply :: forall e. Reply -> Handler e
+reply
+  :: forall e. Warn "Unsafe. Prefer `replyXDelayed`. Do not use more than once in a Handler." =>
+    Reply -> Handler e
 reply = replyType "reply"
 
 replyAcknowledge :: forall e. Handler e
 replyAcknowledge = HandlerM \b _ ->
   liftEff $ replyAcknowledgeImpl b
 
-replyPublic :: forall e. Reply -> Handler e
+replyPublic
+  :: forall e. Warn "Unsafe. Prefer `replyPublicDelayed`. Do not use more than once in a Handler." =>
+    Reply -> Handler e
 replyPublic = replyType "replyPublic"
 
-replyPrivate :: forall e. Reply -> Handler e
+replyPrivate
+  :: forall e. Warn "Unsafe. Prefer `replyPrivateDelayed`. Do not use more than once in a Handler." =>
+    Reply -> Handler e
 replyPrivate = replyType "replyPrivate"
 
 replyInteractive :: forall e. Reply -> Handler e
