@@ -2,16 +2,19 @@ module Botkit.Slack.Controller where
 
 import Prelude
 
-import Control.Monad.Aff (Aff, makeAff)
+import Control.Monad.Aff (Aff, launchAff, makeAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Eff.Exception (Error)
-import Data.Function.Uncurried (Fn4, runFn4)
+import Control.Monad.Eff.Exception (EXCEPTION, Error)
+import Data.Function.Uncurried (Fn3, Fn4, runFn3, runFn4)
+import Data.Newtype (unwrap)
+import Data.String (Pattern)
 import Node.Express.Handler (Handler, runHandlerM)
 import Node.Express.Types (ExpressM, Request, Response)
 import Node.HTTP (Server)
 
-import Botkit.Slack.Types (BOTKIT, RawController)
+import Botkit.Slack.Events (Event)
+import Botkit.Slack.Types (BOTKIT, RawBot, RawController, RawMessage)
 
 type BotConfig =
   { json_file_store :: String }
@@ -59,6 +62,34 @@ createOauthEndpoints c s onSuccess onFailure =
       (runHandlerM <<< onFailure)
       (runHandlerM onSuccess)
 
+on
+  :: forall e.
+    RawController ->
+    Array Event ->
+    (RawBot -> RawMessage -> Aff (botkit :: BOTKIT | e) Unit) ->
+    Aff (botkit :: BOTKIT, err :: EXCEPTION | e) Unit
+on c evs handler =
+  liftEff $ runFn3
+    onImpl
+      c
+      (map show evs)
+      (\b m -> void $ launchAff $ handler b m)
+
+hears
+  :: forall e.
+    RawController ->
+    Array Pattern ->
+    Array Event ->
+    (RawBot -> RawMessage -> Aff (botkit :: BOTKIT | e) Unit) ->
+    Aff (botkit :: BOTKIT, err :: EXCEPTION | e) Unit
+hears c ps evs handler =
+  liftEff $ runFn4
+    hearsImpl
+      c
+      (map unwrap ps)
+      (map show evs)
+      (\b m -> void $ launchAff $ handler b m)
+
 foreign import createSlackBotImpl
   :: forall e. BotConfig -> Eff (botkit :: BOTKIT | e) RawController
 
@@ -85,4 +116,21 @@ foreign import createOauthEndpointsImpl
       Server
       (Error -> Request -> Response -> ExpressM e Unit -> ExpressM e Unit)
       (Request -> Response -> ExpressM e Unit -> ExpressM e Unit)
+      (Eff (botkit :: BOTKIT | e) Unit)
+
+foreign import onImpl
+  :: forall e.
+    Fn3
+      RawController
+      (Array String)
+      (RawBot -> RawMessage -> Eff (botkit :: BOTKIT | e) Unit)
+      (Eff (botkit :: BOTKIT | e) Unit)
+
+foreign import hearsImpl
+  :: forall e.
+    Fn4
+      RawController
+      (Array String)
+      (Array String)
+      (RawBot -> RawMessage -> Eff (botkit :: BOTKIT | e) Unit)
       (Eff (botkit :: BOTKIT | e) Unit)

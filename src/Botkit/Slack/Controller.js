@@ -44,3 +44,25 @@ exports.createOauthEndpointsImpl = function (controller, webserver, onError, onS
     })
   }
 }
+
+exports.onImpl = function () {
+  return function (controller, events, handler) {
+    return function () {
+      var f = function (b, m) {
+        return handler(b)(m)()
+      }
+      controller.on(events, f)
+    }
+  }
+}
+
+exports.hearsImpl = function () {
+  return function (controller, patterns, events, handler) {
+    return function () {
+      var f = function (b, m) {
+        return handler(b)(m)()
+      }
+      controller.hears(patterns, events, f)
+    }
+  }
+}
