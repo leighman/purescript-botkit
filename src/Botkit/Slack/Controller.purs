@@ -19,6 +19,8 @@ import Botkit.Slack.Types (BOTKIT, class IsControllerMode, AppMode, BotMode, Con
 
 data AppM e m a = AppM (Controller m -> Aff e a)
 
+type App e m = AppM (botkit :: BOTKIT | e) m Unit
+
 runAppM :: forall e m a. AppM e m a -> Controller m -> Aff e a
 runAppM (AppM f) = f
 
@@ -67,7 +69,7 @@ setupWebserver port = AppM \c ->
   makeAff \onFailure onSuccess ->
     runFn4 setupWebserverImpl c port onFailure onSuccess
 
-createWebhookEndpoints :: forall e. Server -> AppM (botkit :: BOTKIT | e) AppMode Unit
+createWebhookEndpoints :: forall e. Server -> App e AppMode
 createWebhookEndpoints s = AppM \c ->
   liftEff $ createWebhookEndpointsImpl c s
 
@@ -76,7 +78,7 @@ createOauthEndpoints
     Server ->
     (E.Handler e) ->
     (Error -> E.Handler e) ->
-    AppM (botkit :: BOTKIT | e) AppMode Unit
+    App e AppMode
 createOauthEndpoints s onSuccess onFailure = AppM \c ->
   liftEff $
     runFn4
@@ -97,7 +99,7 @@ on
   :: forall m e. (IsControllerMode m) =>
     Array Event ->
     Handler e ->
-    AppM (botkit :: BOTKIT, err :: EXCEPTION | e) m Unit
+    App (err :: EXCEPTION | e) m
 on evs handler = AppM \c ->
   liftEff $ runFn3
     onImpl
@@ -110,7 +112,7 @@ hears
     Array Pattern ->
     Array Event ->
     Handler e ->
-    AppM (botkit :: BOTKIT, err :: EXCEPTION | e) m Unit
+    App (err :: EXCEPTION | e) m
 hears ps evs handler = AppM \c ->
   liftEff $ runFn4
     hearsImpl
