@@ -2,10 +2,10 @@ module Botkit.Slack.Controller where
 
 import Prelude
 
-import Control.Monad.Aff (Aff, launchAff, makeAff)
+import Control.Monad.Aff (Aff, makeAff, runAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (class MonadEff, liftEff)
-import Control.Monad.Eff.Exception (EXCEPTION, Error)
+import Control.Monad.Eff.Exception (Error)
 import Data.Function.Uncurried (Fn3, Fn4, runFn3, runFn4)
 import Data.Newtype (unwrap)
 import Data.String (Pattern)
@@ -14,6 +14,7 @@ import Node.Express.Types (ExpressM, Request, Response)
 import Node.HTTP (Server)
 
 import Botkit.Slack.Events (Event)
+import Botkit.Slack.Internal.Logger (error)
 import Botkit.Slack.Handler (Handler, runHandlerM)
 import Botkit.Slack.Types (BOTKIT, class IsControllerMode, AppMode, BotMode, Controller, RawBot, RawMessage, toRawController)
 
@@ -99,27 +100,31 @@ on
   :: forall m e. (IsControllerMode m) =>
     Array Event ->
     Handler e ->
-    App (err :: EXCEPTION | e) m
+    App e m
 on evs handler = AppM \c ->
   liftEff $ runFn3
     onImpl
       c
       (map show evs)
-      (\b m -> void $ launchAff $ runHandlerM handler (toRawController c) b m)
+      (\b m -> void $
+        runAff (error (toRawController c) <<< show) pure $
+          runHandlerM handler (toRawController c) b m)
 
 hears
   :: forall m e. (IsControllerMode m) =>
     Array Pattern ->
     Array Event ->
     Handler e ->
-    App (err :: EXCEPTION | e) m
+    App e m
 hears ps evs handler = AppM \c ->
   liftEff $ runFn4
     hearsImpl
       c
       (map unwrap ps)
       (map show evs)
-      (\b m -> void $ launchAff $ runHandlerM handler (toRawController c) b m)
+      (\b m -> void $
+        runAff (error (toRawController c) <<< show) pure $
+          runHandlerM handler (toRawController c) b m)
 
 foreign import createSlackBotImpl
   :: forall e. BotConfig -> Eff (botkit :: BOTKIT | e) (Controller BotMode)
