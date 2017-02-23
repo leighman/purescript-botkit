@@ -1,7 +1,15 @@
-exports.createSlackBotImpl = function (config) {
-  var Botkit = require('botkit')
-  return function () {
-    return Botkit.slackbot(config)
+exports.createSlackBotImpl = function (toNullable) {
+  return function (config) {
+    var Botkit = require('botkit')
+    var c = {}
+    for (var k in config) {
+      var x = toNullable(config[k])
+      if (x) c[k] = x
+    }
+
+    return function () {
+      return Botkit.slackbot(c)
+    }
   }
 }
 

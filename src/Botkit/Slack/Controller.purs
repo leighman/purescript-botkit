@@ -7,7 +7,9 @@ import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (class MonadEff, liftEff)
 import Control.Monad.Eff.Exception (Error)
 import Data.Function.Uncurried (Fn3, Fn4, runFn3, runFn4)
+import Data.Maybe (Maybe)
 import Data.Newtype (unwrap)
+import Data.Nullable (Nullable, toNullable)
 import Data.String (Pattern)
 import Node.Express.Handler (Handler, runHandlerM) as E
 import Node.Express.Types (ExpressM, Request, Response)
@@ -16,7 +18,7 @@ import Node.HTTP (Server)
 import Botkit.Slack.Events (Event)
 import Botkit.Slack.Internal.Logger (error)
 import Botkit.Slack.Handler (Handler, runHandlerM)
-import Botkit.Slack.Types (BOTKIT, class IsControllerMode, AppMode, BotMode, Controller, RawBot, RawMessage, toRawController)
+import Botkit.Slack.Types (BOTKIT, class IsControllerMode, AppMode, BotMode, Controller, RawBot, RawMessage, RawStorage, toRawController)
 
 data AppM e m a = AppM (Controller m -> Aff e a)
 
@@ -45,7 +47,9 @@ instance monadEffAppM :: MonadEff e (AppM e m) where
   liftEff a = AppM \_ -> liftEff a
 
 type BotConfig =
-  { json_file_store :: String }
+  { json_file_store :: Maybe String
+  , storage :: Maybe RawStorage
+  }
 
 type AppConfig =
   { clientId :: String
@@ -57,7 +61,7 @@ type AppConfig =
 type Port = Int
 
 createSlackBot :: forall e. BotConfig -> Eff (botkit :: BOTKIT | e) (Controller BotMode)
-createSlackBot = createSlackBotImpl
+createSlackBot = createSlackBotImpl toNullable
 
 toSlackApp :: forall e. AppConfig -> Controller BotMode -> Eff (botkit :: BOTKIT | e) (Controller AppMode)
 toSlackApp = toSlackAppImpl
@@ -127,7 +131,7 @@ hears ps evs handler = AppM \c ->
           runHandlerM handler (toRawController c) b m)
 
 foreign import createSlackBotImpl
-  :: forall e. BotConfig -> Eff (botkit :: BOTKIT | e) (Controller BotMode)
+  :: forall e. (forall a. Maybe a -> Nullable a) -> BotConfig -> Eff (botkit :: BOTKIT | e) (Controller BotMode)
 
 foreign import toSlackAppImpl
   :: forall e. AppConfig -> Controller BotMode -> Eff (botkit :: BOTKIT | e) (Controller AppMode)

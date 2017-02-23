@@ -17,6 +17,7 @@ module Botkit.Slack.Types
   , RawController
   , RawMessage
   , RawReply
+  , RawStorage
 
   , toRawController
   ) where
@@ -27,6 +28,7 @@ foreign import data RawBot :: *
 foreign import data RawController :: *
 foreign import data RawMessage :: *
 
+foreign import data RawStorage :: *
 foreign import data RawChannel :: *
 foreign import data RawUser :: *
 foreign import data RawTeam :: *
