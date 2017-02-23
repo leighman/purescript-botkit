@@ -10,6 +10,20 @@ module Botkit.Slack.Handler
   , replyPrivate
   , replyPublicDelayed
   , replyPrivateDelayed
+
+  , allChannels
+  , allTeams
+  , allUsers
+  , getChannel
+  , getTeam
+  , getUser
+  , saveChannel
+  , saveTeam
+  , saveUser
+  , deleteChannel
+  , deleteTeam
+  , deleteUser
+
   ) where
 
 import Prelude
