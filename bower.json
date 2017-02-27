@@ -21,6 +21,7 @@
     "purescript-nullable": "^2.0.0"
   },
   "devDependencies": {
-    "purescript-psci-support": "^2.0.0"
+    "purescript-psci-support": "^2.0.0",
+    "purescript-spec": "^0.12.4"
   }
 }

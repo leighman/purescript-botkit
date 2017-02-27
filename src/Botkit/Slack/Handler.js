@@ -24,9 +24,9 @@ exports.getImpl = function (controller) {
           return function () {
             controller.storage[type].get(xid, function (err, x) {
               if (err) {
-                onError(Error(err))
+                onError(Error(err))()
               } else {
-                onSuccess(x)
+                onSuccess(x)()
               }
             })
           }
@@ -41,12 +41,16 @@ exports.saveOrDeleteImpl = function (controller) {
     return function (saveOrDelete) {
       return function (x) {
         return function (onError) {
-          return function () {
-            controller.storage[type][saveOrDelete](x, function (err) {
-              if (err) {
-                onError(Error(err))
-              }
-            })
+          return function (onSuccess) {
+            return function () {
+              controller.storage[type][saveOrDelete](x, function (err) {
+                if (err) {
+                  onError(Error(err))()
+                } else {
+                  onSuccess()()
+                }
+              })
+            }
           }
         }
       }
@@ -61,9 +65,9 @@ exports.allImpl = function (controller) {
         return function () {
           controller.storage[type].all(function (err, xs) {
             if (err) {
-              onError(Error(err))
+              onError(Error(err))()
             } else {
-              onSuccess(xs)
+              onSuccess(xs)()
             }
           })
         }

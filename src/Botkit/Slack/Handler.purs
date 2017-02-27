@@ -159,14 +159,14 @@ deleteUser = delete "users"
 
 save :: forall a e. String -> a -> Handler e
 save t x = HandlerM \c _ _ ->
-  makeAff (\onError _ ->
-    saveOrDeleteImpl c t "save" x onError
+  makeAff (\onError onSuccess ->
+    saveOrDeleteImpl c t "save" x onError onSuccess
   )
 
 delete :: forall i e. String -> i -> Handler e
 delete t xid = HandlerM \c _ _ ->
   makeAff (\onError onSuccess ->
-    saveOrDeleteImpl c t "delete" xid onError
+    saveOrDeleteImpl c t "delete" xid onError onSuccess
   )
 
 foreign import saveOrDeleteImpl
@@ -176,6 +176,7 @@ foreign import saveOrDeleteImpl
     String ->
     ai ->
     (Error -> Eff (botkit :: BOTKIT | e) Unit) ->
+    (Unit -> Eff (botkit :: BOTKIT | e) Unit) ->
     Eff (botkit :: BOTKIT | e) Unit
 
 allChannels :: forall e. HandlerM (botkit :: BOTKIT | e) (Array RawChannel)
