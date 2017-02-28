@@ -22,9 +22,6 @@ exports.goodStorage = {
   save: function (user, cb) {
     cb(null, user.id)
   },
-  delete: function (uid, cb) {
-    cb(null, uid)
-  },
   all: function (cb) {
     cb(null, [])
   },
@@ -35,9 +32,6 @@ exports.badStorage = {
     cb('An error occurred')
   },
   save: function (user, cb) {
-    cb('An error occurred')
-  },
-  delete: function (uid, cb) {
     cb('An error occurred')
   },
   all: function (cb) {

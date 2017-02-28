@@ -2,7 +2,7 @@ module Test.Handler where
 
 import Prelude
 
-import Botkit.Slack.Handler (HandlerM, allUsers, deleteUser, getUser, saveUser, runHandlerM)
+import Botkit.Slack.Handler (HandlerM, allUsers, getUser, saveUser, runHandlerM)
 import Botkit.Slack.Types (BOTKIT, RawBot, RawController, RawMessage, RawUser, UserId(..))
 import Control.Monad.Aff (Aff)
 import Data.Maybe (Maybe(..))
@@ -49,8 +49,6 @@ handlerSpec = do
       it "saveUser works" do
         let u = unUser $ makeMockUser uid
         run c $ saveUser u
-      it "deleteUser works" do
-        run c $ deleteUser uid
       it "allUsers works" do
         us <- run c $ allUsers
         (User <$> us) `shouldEqual` []
@@ -62,7 +60,5 @@ handlerSpec = do
       it "saveUser shouldError" do
         let u = unUser $ makeMockUser uid
         expectError $ run c $ saveUser u
-      it "deleteUser shouldError" do
-        expectError $ run c $ deleteUser uid
       it "allUsers shouldError" do
         expectError $ run c $ allUsers

@@ -36,21 +36,19 @@ exports.getImpl = function (controller) {
   }
 }
 
-exports.saveOrDeleteImpl = function (controller) {
+exports.saveImpl = function (controller) {
   return function (type) {
-    return function (saveOrDelete) {
-      return function (x) {
-        return function (onError) {
-          return function (onSuccess) {
-            return function () {
-              controller.storage[type][saveOrDelete](x, function (err) {
-                if (err) {
-                  onError(Error(err))()
-                } else {
-                  onSuccess()()
-                }
-              })
-            }
+    return function (x) {
+      return function (onError) {
+        return function (onSuccess) {
+          return function () {
+            controller.storage[type].save(x, function (err) {
+              if (err) {
+                onError(Error(err))()
+              } else {
+                onSuccess()()
+              }
+            })
           }
         }
       }

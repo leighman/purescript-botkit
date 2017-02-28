@@ -20,9 +20,6 @@ module Botkit.Slack.Handler
   , saveChannel
   , saveTeam
   , saveUser
-  , deleteChannel
-  , deleteTeam
-  , deleteUser
 
   ) where
 
@@ -148,33 +145,17 @@ saveTeam = save "teams"
 saveUser :: forall e. RawUser -> Handler e
 saveUser = save "users"
 
-deleteChannel :: forall e. ChannelId -> Handler e
-deleteChannel = delete "channels"
-
-deleteTeam :: forall e. TeamId -> Handler e
-deleteTeam = delete "teams"
-
-deleteUser :: forall e. UserId -> Handler e
-deleteUser = delete "users"
-
 save :: forall a e. String -> a -> Handler e
 save t x = HandlerM \c _ _ ->
   makeAff (\onError onSuccess ->
-    saveOrDeleteImpl c t "save" x onError onSuccess
+    saveImpl c t x onError onSuccess
   )
 
-delete :: forall i e. String -> i -> Handler e
-delete t xid = HandlerM \c _ _ ->
-  makeAff (\onError onSuccess ->
-    saveOrDeleteImpl c t "delete" xid onError onSuccess
-  )
-
-foreign import saveOrDeleteImpl
-  :: forall ai e.
+foreign import saveImpl
+  :: forall a e.
     RawController ->
     String ->
-    String ->
-    ai ->
+    a ->
     (Error -> Eff (botkit :: BOTKIT | e) Unit) ->
     (Unit -> Eff (botkit :: BOTKIT | e) Unit) ->
     Eff (botkit :: BOTKIT | e) Unit
