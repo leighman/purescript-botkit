@@ -25,7 +25,7 @@ foreign import userShow :: User -> String
 foreign import userEq :: User -> User -> Boolean
 foreign import makeMockUser :: UserId -> User
 
-foreign import data RawStorage :: *
+foreign import data RawStorage :: Type
 foreign import goodStorage :: RawStorage
 foreign import badStorage :: RawStorage
 foreign import makeMockController :: RawStorage -> RawController

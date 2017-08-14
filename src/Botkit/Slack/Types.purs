@@ -22,23 +22,25 @@ module Botkit.Slack.Types
   , toRawController
   ) where
 
-foreign import data BOTKIT :: !
+import Control.Monad.Eff (kind Effect)
 
-foreign import data RawBot :: *
-foreign import data RawController :: *
-foreign import data RawMessage :: *
+foreign import data BOTKIT :: Effect
 
-foreign import data RawStorage :: *
-foreign import data RawChannel :: *
-foreign import data RawUser :: *
-foreign import data RawTeam :: *
+foreign import data RawBot :: Type
+foreign import data RawController :: Type
+foreign import data RawMessage :: Type
+
+foreign import data RawStorage :: Type
+foreign import data RawChannel :: Type
+foreign import data RawUser :: Type
+foreign import data RawTeam :: Type
 
 newtype ChannelId = ChannelId String
 newtype TeamId = TeamId String
 newtype UserId = UserId String
 
-foreign import data RawReply :: *
-foreign import data RawAttachment :: *
+foreign import data RawReply :: Type
+foreign import data RawAttachment :: Type
 
 newtype Controller a = Controller RawController
 
